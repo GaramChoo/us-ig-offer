@@ -767,12 +767,21 @@ function renderView(){
   const ytcArr=vFiltered.filter(r=>r.ytc>0);
   const sprdArr=vFiltered.filter(r=>r.spread>0);
 
-  document.getElementById('view-stats').innerHTML=`
-    <div class="stat"><div class="stat-label">레코드</div><div class="stat-val">${vFiltered.length}</div></div>
-    <div class="stat"><div class="stat-label">발행자</div><div class="stat-val">${[...new Set(vFiltered.map(r=>r.issuer))].length}</div></div>
+  // stat 카드: 특정 날짜 선택 시에만 표시
+  const statsEl = document.getElementById('view-stats');
+  if(activeDateFilter){
+    const dayIssuers = [...new Set(vFiltered.map(r=>r.issuer))].length;
+    statsEl.innerHTML=`
+    <div class="stat"><div class="stat-label">종목 수</div><div class="stat-val">${vFiltered.length}</div></div>
+    <div class="stat"><div class="stat-label">발행자 수</div><div class="stat-val">${dayIssuers}</div></div>
     <div class="stat"><div class="stat-label">평균 YTC</div><div class="stat-val">${ytcArr.length?(ytcArr.reduce((s,r)=>s+r.ytc,0)/ytcArr.length).toFixed(2)+'%':'—'}</div></div>
-    <div class="stat"><div class="stat-label">평균 Sprd</div><div class="stat-val">${sprdArr.length?Math.round(sprdArr.reduce((s,r)=>s+r.spread,0)/sprdArr.length)+'bp':'—'}</div></div>
-  `;
+    <div class="stat"><div class="stat-label">평균 Spread</div><div class="stat-val">${sprdArr.length?Math.round(sprdArr.reduce((s,r)=>s+r.spread,0)/sprdArr.length)+'bp':'—'}</div></div>
+    `;
+    statsEl.style.display='grid';
+  } else {
+    statsEl.innerHTML='';
+    statsEl.style.display='none';
+  }
 
   document.getElementById('v-tbody').innerHTML=slice.map(r=>`<tr>
     <td><span class="badge b-date">${r.date}</span></td>
