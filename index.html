@@ -481,6 +481,7 @@
   <div class="pager">
     <span id="v-pager-info"></span>
     <div style="display:flex;gap:6px;align-items:center">
+      <button class="btn btn-sm" onclick="exportJSON()" title="전체 DB를 JSON 파일로 저장 → Claude에 업로드해서 분석 가능">JSON 내보내기</button>
       <button class="btn btn-sm" onclick="vPrev()">← 이전</button>
       <span id="v-page-num" style="min-width:60px;text-align:center"></span>
       <button class="btn btn-sm" onclick="vNext()">다음 →</button>
@@ -846,6 +847,27 @@ function switchTab(e, name){
 }
 
 /* ── Init ── */
+/* ── JSON 내보내기 ── */
+function exportJSON(){
+  const db = loadDB();
+  if(!db.length){ alert('저장된 데이터가 없습니다.'); return; }
+  const dates = [...new Set(db.map(r=>r.date))].sort();
+  const payload = {
+    exported_at: new Date().toISOString(),
+    date_range: { from: dates[0], to: dates[dates.length-1] },
+    total_records: db.length,
+    total_dates: dates.length,
+    records: db
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `us_ig_axe_${dates[0]}_${dates[dates.length-1]}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 document.getElementById('input-date').value = new Date().toISOString().slice(0,10);
 updateHeader();
 populateFilters();
