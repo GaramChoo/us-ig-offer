@@ -443,8 +443,28 @@
       <option>Sr Preferred</option>
       <option>Sr Non Preferred</option>
     </select>
-    <select id="v-moodys" onchange="renderView()"><option value="">All Moody's</option></select>
-    <select id="v-sp" onchange="renderView()"><option value="">All S&P</option></select>
+    <div style="position:relative;display:inline-block">
+      <button class="btn btn-sm" onclick="toggleRatingDrop('moodys')" id="moodys-btn">Moody's ▾</button>
+      <div id="moodys-drop" style="display:none;position:absolute;top:100%;left:0;z-index:200;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:8px;min-width:130px;margin-top:4px;box-shadow:0 4px 16px rgba(0,0,0,0.4)">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;gap:6px">
+          <button class="btn btn-sm" style="font-size:10px;padding:0 6px;height:22px" onclick="setAllRating('moodys',true)">전체</button>
+          <button class="btn btn-sm" style="font-size:10px;padding:0 6px;height:22px" onclick="setRatingMin('moodys')">이상 선택</button>
+          <button class="btn btn-sm" style="font-size:10px;padding:0 6px;height:22px" onclick="setAllRating('moodys',false)">해제</button>
+        </div>
+        <div id="moodys-checks" style="display:flex;flex-direction:column;gap:3px;max-height:220px;overflow-y:auto"></div>
+      </div>
+    </div>
+    <div style="position:relative;display:inline-block">
+      <button class="btn btn-sm" onclick="toggleRatingDrop('sp')" id="sp-btn">S&P ▾</button>
+      <div id="sp-drop" style="display:none;position:absolute;top:100%;left:0;z-index:200;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:8px;min-width:130px;margin-top:4px;box-shadow:0 4px 16px rgba(0,0,0,0.4)">
+        <div style="display:flex;justify-content:space-between;margin-bottom:6px;gap:6px">
+          <button class="btn btn-sm" style="font-size:10px;padding:0 6px;height:22px" onclick="setAllRating('sp',true)">전체</button>
+          <button class="btn btn-sm" style="font-size:10px;padding:0 6px;height:22px" onclick="setRatingMin('sp')">이상 선택</button>
+          <button class="btn btn-sm" style="font-size:10px;padding:0 6px;height:22px" onclick="setAllRating('sp',false)">해제</button>
+        </div>
+        <div id="sp-checks" style="display:flex;flex-direction:column;gap:3px;max-height:220px;overflow-y:auto"></div>
+      </div>
+    </div>
     <select id="v-coupon" onchange="renderView()">
       <option value="">Fixed & Float</option>
       <option value="fixed">Fixed only</option>
@@ -681,19 +701,96 @@ function populateFilters(){
     inds.forEach(i=>{ const o=document.createElement('option'); o.value=i; o.text=i; sel.appendChild(o); });
     sel.value=cur;
   });
-  const mSel=document.getElementById('v-moodys'), mCur=mSel.value;
+  // Moody's checkboxes
   const moodysPresent=[...new Set(db.map(r=>r.moodys))].filter(Boolean).sort((a,b)=>moodysRank(a)-moodysRank(b));
-  mSel.innerHTML="<option value=''>All Moody's</option>";
-  moodysPresent.forEach(m=>{ const o=document.createElement('option'); o.value=m; o.text=m; mSel.appendChild(o); });
-  mSel.value=mCur;
-  const sSel=document.getElementById('v-sp'), sCur=sSel.value;
-  const spPresent=[...new Set(db.map(r=>r.sp))].filter(Boolean).sort((a,b)=>spRank(a)-spRank(b));
-  sSel.innerHTML="<option value=''>All S&P</option>";
-  spPresent.forEach(s=>{ const o=document.createElement('option'); o.value=s; o.text=s; sSel.appendChild(o); });
-  sSel.value=sCur;
+  const mChecks = document.getElementById('moodys-checks');
+  if(mChecks){
+    const prevM = getCheckedRatings('moodys');
+    mChecks.innerHTML = moodysPresent.map(m=>`
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-family:var(--mono);font-size:11px;color:var(--text2);padding:1px 0">
+        <input type="checkbox" value="${m}" ${(!prevM.size||prevM.has(m))?'checked':''} onchange="renderView()" style="accent-color:var(--accent);cursor:pointer">
+        <span class="${ratingClass(m,'moodys')}">${m}</span>
+      </label>`).join('');
+  }
+  // S&P checkboxes
+  const spPresent=[...new Set(db.map(r=>r.sp))].filter(s=>s&&s!=='#N/A N/A').sort((a,b)=>spRank(a)-spRank(b));
+  const sChecks = document.getElementById('sp-checks');
+  if(sChecks){
+    const prevS = getCheckedRatings('sp');
+    sChecks.innerHTML = spPresent.map(s=>`
+      <label style="display:flex;align-items:center;gap:6px;cursor:pointer;font-family:var(--mono);font-size:11px;color:var(--text2);padding:1px 0">
+        <input type="checkbox" value="${s}" ${(!prevS.size||prevS.has(s))?'checked':''} onchange="renderView()" style="accent-color:var(--accent);cursor:pointer">
+        <span class="${ratingClass(s,'sp')}">${s}</span>
+      </label>`).join('');
+  }
+  updateRatingBtnLabel('moodys');
+  updateRatingBtnLabel('sp');
 }
 
 /* ── View panel ── */
+// ── Rating checkbox helpers ──
+function getCheckedRatings(type){
+  const el = document.getElementById(type==='moodys'?'moodys-checks':'sp-checks');
+  if(!el) return new Set();
+  const checked = [...el.querySelectorAll('input[type=checkbox]:checked')].map(c=>c.value);
+  const all = [...el.querySelectorAll('input[type=checkbox]')].map(c=>c.value);
+  // 전체 선택이면 필터 없음으로 처리
+  if(checked.length===all.length) return new Set();
+  return new Set(checked);
+}
+
+function setAllRating(type, checked){
+  const el = document.getElementById(type==='moodys'?'moodys-checks':'sp-checks');
+  if(!el) return;
+  el.querySelectorAll('input[type=checkbox]').forEach(c=>c.checked=checked);
+  updateRatingBtnLabel(type); renderView();
+}
+
+function setRatingMin(type){
+  const order = type==='moodys' ? MOODYS_ORDER : SP_ORDER;
+  const el = document.getElementById(type==='moodys'?'moodys-checks':'sp-checks');
+  if(!el) return;
+  // 팝업으로 기준 등급 선택
+  const checks = [...el.querySelectorAll('input[type=checkbox]')];
+  const ratings = checks.map(c=>c.value);
+  if(!ratings.length) return;
+  const chosen = prompt('기준 등급 입력 (이 등급 이상 선택)\n선택 가능: '+ratings.join(', '));
+  if(!chosen) return;
+  const minIdx = order.indexOf(chosen.trim());
+  if(minIdx===-1){ alert('등급을 정확히 입력해주세요.'); return; }
+  checks.forEach(c=>{ const i=order.indexOf(c.value); c.checked=(i!==-1&&i<=minIdx); });
+  updateRatingBtnLabel(type); renderView();
+}
+
+function updateRatingBtnLabel(type){
+  const el = document.getElementById(type==='moodys'?'moodys-checks':'sp-checks');
+  const btn = document.getElementById(type==='moodys'?'moodys-btn':'sp-btn');
+  if(!el||!btn) return;
+  const checked=[...el.querySelectorAll('input:checked')].map(c=>c.value);
+  const all=[...el.querySelectorAll('input')];
+  if(!all.length||checked.length===all.length) btn.textContent=(type==='moodys'?"Moody's":"S&P")+' ▾';
+  else if(checked.length===0) btn.textContent=(type==='moodys'?"Moody's":"S&P")+' (없음) ▾';
+  else btn.textContent=(type==='moodys'?"Moody's":"S&P")+` (${checked.length}) ▾`;
+}
+
+function toggleRatingDrop(type){
+  const drop = document.getElementById(type+'-drop');
+  const other = document.getElementById(type==='moodys'?'sp-drop':'moodys-drop');
+  if(other) other.style.display='none';
+  drop.style.display = drop.style.display==='none' ? 'block' : 'none';
+}
+
+// 외부 클릭 시 드롭다운 닫기
+document.addEventListener('click', e=>{
+  ['moodys','sp'].forEach(type=>{
+    const drop=document.getElementById(type+'-drop');
+    const btn=document.getElementById(type+'-btn');
+    if(drop&&btn&&!drop.contains(e.target)&&!btn.contains(e.target)){
+      drop.style.display='none';
+    }
+  });
+});
+
 let vSortCol='date', vSortDir=-1, vPage=1, vFiltered=[], activeDateFilter='';
 
 document.getElementById('v-thead').querySelectorAll('th').forEach(th=>{
@@ -735,8 +832,7 @@ function renderView(){
   const q=document.getElementById('v-search').value.toLowerCase();
   const ind=document.getElementById('v-ind').value;
   const rank=document.getElementById('v-rank').value;
-  const moodysF=document.getElementById('v-moodys').value;
-  const spF=document.getElementById('v-sp').value;
+
   const coupon=document.getElementById('v-coupon').value;
   const per=parseInt(document.getElementById('v-per').value);
 
@@ -745,8 +841,8 @@ function renderView(){
     if(q&&![r.sec,r.issuer,r.isin,r.industry].some(s=>s.toLowerCase().includes(q))) return false;
     if(ind&&r.industry!==ind) return false;
     if(rank&&r.rank!==rank) return false;
-    if(moodysF&&r.moodys!==moodysF) return false;
-    if(spF&&r.sp!==spF) return false;
+    const mSet=getCheckedRatings('moodys'); if(mSet.size&&!mSet.has(r.moodys)) return false;
+    const sSet=getCheckedRatings('sp'); if(sSet.size){const clean=(r.sp||'').replace(/\s*\*[+-]?\s*/g,'').trim(); if(!sSet.has(clean)&&!sSet.has(r.sp)) return false;}
     if(coupon==='fixed'&&r.isFloat) return false;
     if(coupon==='float'&&!r.isFloat) return false;
     return true;
