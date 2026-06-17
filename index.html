@@ -470,6 +470,32 @@
       <option value="fixed">Fixed only</option>
       <option value="float">Float only</option>
     </select>
+    <span class="label">잔존만기</span>
+    <select id="v-mat-min" onchange="renderView()" style="font-family:var(--mono);font-size:12px">
+      <option value="0">0Y~</option>
+      <option value="0.5">0.5Y~</option>
+      <option value="1">1Y~</option>
+      <option value="2">2Y~</option>
+      <option value="3">3Y~</option>
+      <option value="5">5Y~</option>
+      <option value="7">7Y~</option>
+      <option value="10">10Y~</option>
+      <option value="15">15Y~</option>
+      <option value="20">20Y~</option>
+    </select>
+    <span class="label">~</span>
+    <select id="v-mat-max" onchange="renderView()" style="font-family:var(--mono);font-size:12px">
+      <option value="1">~1Y</option>
+      <option value="2">~2Y</option>
+      <option value="3">~3Y</option>
+      <option value="5">~5Y</option>
+      <option value="7">~7Y</option>
+      <option value="10">~10Y</option>
+      <option value="15">~15Y</option>
+      <option value="20">~20Y</option>
+      <option value="30">~30Y</option>
+      <option value="999" selected>~제한없음</option>
+    </select>
     <select id="v-per" onchange="renderView()">
       <option value="25">25행</option>
       <option value="50">50행</option>
@@ -845,6 +871,16 @@ function renderView(){
     const sSet=getCheckedRatings('sp'); if(sSet.size){const clean=(r.sp||'').replace(/\s*\*[+-]?\s*/g,'').trim(); if(!sSet.has(clean)&&!sSet.has(r.sp)) return false;}
     if(coupon==='fixed'&&r.isFloat) return false;
     if(coupon==='float'&&!r.isFloat) return false;
+    // 잔존만기 필터
+    if(r.maturityStr){
+      const today = new Date();
+      const mat = new Date(r.maturityStr);
+      const yearsLeft = (mat - today) / (365.25*24*60*60*1000);
+      const matMin = parseFloat(document.getElementById('v-mat-min').value);
+      const matMax = parseFloat(document.getElementById('v-mat-max').value);
+      if(yearsLeft < matMin) return false;
+      if(yearsLeft > matMax) return false;
+    }
     return true;
   });
 
