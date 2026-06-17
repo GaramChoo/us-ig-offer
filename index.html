@@ -444,7 +444,7 @@
       <option>Sr Non Preferred</option>
     </select>
     <div style="position:relative;display:inline-block">
-      <button class="btn btn-sm" onclick="toggleRatingDrop('moodys')" id="moodys-btn">Moody's ▾</button>
+      <button class="btn btn-sm" onclick="toggleRatingDrop('moodys')" id="moodys-btn" style="font-family:var(--sans)">Moody's ▾</button>
       <div id="moodys-drop" style="display:none;position:absolute;top:100%;left:0;z-index:200;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:8px;min-width:130px;margin-top:4px;box-shadow:0 4px 16px rgba(0,0,0,0.4)">
         <div style="display:flex;justify-content:space-between;margin-bottom:6px;gap:6px">
           <button class="btn btn-sm" style="font-size:10px;padding:0 6px;height:22px" onclick="setAllRating('moodys',true)">전체</button>
@@ -455,7 +455,7 @@
       </div>
     </div>
     <div style="position:relative;display:inline-block">
-      <button class="btn btn-sm" onclick="toggleRatingDrop('sp')" id="sp-btn">S&P ▾</button>
+      <button class="btn btn-sm" onclick="toggleRatingDrop('sp')" id="sp-btn" style="font-family:var(--sans)">S&P ▾</button>
       <div id="sp-drop" style="display:none;position:absolute;top:100%;left:0;z-index:200;background:var(--bg3);border:1px solid var(--border2);border-radius:8px;padding:8px;min-width:130px;margin-top:4px;box-shadow:0 4px 16px rgba(0,0,0,0.4)">
         <div style="display:flex;justify-content:space-between;margin-bottom:6px;gap:6px">
           <button class="btn btn-sm" style="font-size:10px;padding:0 6px;height:22px" onclick="setAllRating('sp',true)">전체</button>
@@ -472,29 +472,29 @@
     </select>
     <span class="label">잔존만기</span>
     <select id="v-mat-min" onchange="renderView()" style="font-family:var(--mono);font-size:12px">
-      <option value="0">0Y~</option>
-      <option value="0.5">0.5Y~</option>
-      <option value="1">1Y~</option>
-      <option value="2">2Y~</option>
-      <option value="3">3Y~</option>
-      <option value="5">5Y~</option>
-      <option value="7">7Y~</option>
-      <option value="10">10Y~</option>
-      <option value="15">15Y~</option>
-      <option value="20">20Y~</option>
+      <option value="0">0Y</option>
+      <option value="0.5">0.5Y</option>
+      <option value="1">1Y</option>
+      <option value="2">2Y</option>
+      <option value="3">3Y</option>
+      <option value="5">5Y</option>
+      <option value="7">7Y</option>
+      <option value="10">10Y</option>
+      <option value="15">15Y</option>
+      <option value="20">20Y</option>
     </select>
-    <span class="label">~</span>
+    <span class="label">—</span>
     <select id="v-mat-max" onchange="renderView()" style="font-family:var(--mono);font-size:12px">
-      <option value="1">~1Y</option>
-      <option value="2">~2Y</option>
-      <option value="3">~3Y</option>
-      <option value="5">~5Y</option>
-      <option value="7">~7Y</option>
-      <option value="10">~10Y</option>
-      <option value="15">~15Y</option>
-      <option value="20">~20Y</option>
-      <option value="30">~30Y</option>
-      <option value="999" selected>~제한없음</option>
+      <option value="1">1Y</option>
+      <option value="2">2Y</option>
+      <option value="3">3Y</option>
+      <option value="5">5Y</option>
+      <option value="7">7Y</option>
+      <option value="10">10Y</option>
+      <option value="15">15Y</option>
+      <option value="20">20Y</option>
+      <option value="30">30Y</option>
+      <option value="999" selected>제한없음</option>
     </select>
     <select id="v-per" onchange="renderView()">
       <option value="25">25행</option>
